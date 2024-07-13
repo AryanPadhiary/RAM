@@ -1,0 +1,58 @@
+module dual_port_ram_tb;
+  reg [7:0] data_a, data_b; // input data
+  reg [5:0] addr_a, addr_b; // Port A and Port B address
+  reg we_a, we_b; // write enable for Port A and Port B
+  reg clk; // clk
+  wire [7:0] q_a, q_b; // output data at Port A and Port B
+  
+  dual_port_ram dpr1(
+    .data_a(data_a),
+    .data_b(data_b),
+    .addr_a(addr_a),
+    .addr_b(addr_b),
+    .we_a(we_a),
+    .we_b(we_b),
+    .clk(clk),
+    .q_a(q_a),
+    .q_b(q_b)
+  );
+  
+  // Generate clock signal
+  initial begin
+    $dumpfile("dump.vcd");
+    $dumpvars(1, dual_port_ram_tb);       
+    clk = 1'b1;
+    forever #5 clk = ~clk; // 100 MHz clock period (50ns high, 50ns low)
+  end
+  
+  // Apply stimulus to the inputs
+  initial begin
+    // Write data to Port A and Port B
+    data_a = 8'h33; addr_a = 6'h01; we_a = 1'b1;
+    data_b = 8'h44; addr_b = 6'h02; we_b = 1'b1;
+    #10;
+    
+    // Write new data to Port A and read data from Port B
+    data_a = 8'h55; addr_a = 6'h03; we_a = 1'b1;
+    addr_b = 6'h01; we_b = 1'b0;
+    #10;
+    
+    // Read data from both ports
+    addr_a = 6'h02; we_a = 1'b0;
+    addr_b = 6'h03; we_b = 1'b0;
+    #10;
+    
+    // Write new data to Port B and read from Port A
+    addr_a = 6'h01; we_a = 1'b0;
+    data_b = 8'h77; addr_b = 6'h02; we_b = 1'b1;
+    #10;
+
+    // Read final data from both ports
+    addr_a = 6'h03; we_a = 1'b0;
+    addr_b = 6'h01; we_b = 1'b0;
+    #10;
+    
+    // End simulation
+    $finish;
+  end
+endmodule
